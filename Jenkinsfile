@@ -2,25 +2,30 @@ pipeline {
     agent any
 
     stages {
-        stage('Checkout') {
+        stage('Clone Repo') {
             steps {
                 git branch: 'main',
                     url: 'git@github.com:Arunkumar908090/portfolio-site.git'
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                echo "Building Portfolio Site..."
-                // if you have build commands, add here
-                // e.g., npm install && npm run build
+                script {
+                    sh 'docker build -t portfolio-site .'
+                }
             }
         }
 
-        stage('Deploy') {
+        stage('Run Container') {
             steps {
-                echo "Deploying Portfolio Site..."
-                // add deployment steps (Docker, Nginx, etc.)
+                script {
+                    // Stop old container if running
+                    sh 'docker stop portfolio || true && docker rm portfolio || true'
+                    
+                    // Run new container mapping port 8081 -> 80
+                    sh 'docker run -d --name portfolio -p 8081:80 portfolio-site'
+                }
             }
         }
     }
